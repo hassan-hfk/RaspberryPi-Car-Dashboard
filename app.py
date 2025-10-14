@@ -105,6 +105,26 @@ def handle_joystick(data):
         'status': 'received'
     })
 
+@app.route('/servo_control', methods=['POST'])
+def servo_control():
+    data = request.json
+    servo_id = data.get('servo_id')
+    angle = data.get('angle', 90)
+    
+    # Ensure angle is within range
+    angle = max(0, min(180, angle))
+    
+    print(f"Servo {servo_id}: {angle}°")
+    # Here you would send PWM signal to servo
+    # Example with RPi.GPIO:
+    # servo_pwm[servo_id].ChangeDutyCycle(angle_to_duty_cycle(angle))
+    
+    return jsonify({
+        'status': 'success',
+        'servo_id': servo_id,
+        'angle': angle
+    })
+
 @socketio.on('connect')
 def handle_connect():
     print('Client connected')

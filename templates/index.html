@@ -102,6 +102,78 @@
                     </div>
                 </div>
 
+                <!-- Servo Controls -->
+                <div class="control-panel servo-panel">
+                    <h3>🔧 Servo Motor Control</h3>
+                    <div class="servo-controls">
+                        <!-- Servo 1 -->
+                        <div class="servo-item">
+                            <div class="servo-header">
+                                <span class="servo-label">Servo 1</span>
+                                <span class="servo-value" id="servo1-value">90°</span>
+                            </div>
+                            <div class="servo-slider-container">
+                                <span class="slider-limit">0°</span>
+                                <input type="range" 
+                                       class="servo-slider" 
+                                       id="servo1-slider" 
+                                       min="0" 
+                                       max="180" 
+                                       value="90"
+                                       data-servo="1">
+                                <span class="slider-limit">180°</span>
+                            </div>
+                        </div>
+
+                        <!-- Servo 2 -->
+                        <div class="servo-item">
+                            <div class="servo-header">
+                                <span class="servo-label">Servo 2</span>
+                                <span class="servo-value" id="servo2-value">90°</span>
+                            </div>
+                            <div class="servo-slider-container">
+                                <span class="slider-limit">0°</span>
+                                <input type="range" 
+                                       class="servo-slider" 
+                                       id="servo2-slider" 
+                                       min="0" 
+                                       max="180" 
+                                       value="90"
+                                       data-servo="2">
+                                <span class="slider-limit">180°</span>
+                            </div>
+                        </div>
+
+                        <!-- Servo 3 -->
+                        <div class="servo-item">
+                            <div class="servo-header">
+                                <span class="servo-label">Servo 3</span>
+                                <span class="servo-value" id="servo3-value">90°</span>
+                            </div>
+                            <div class="servo-slider-container">
+                                <span class="slider-limit">0°</span>
+                                <input type="range" 
+                                       class="servo-slider" 
+                                       id="servo3-slider" 
+                                       min="0" 
+                                       max="180" 
+                                       value="90"
+                                       data-servo="3">
+                                <span class="slider-limit">180°</span>
+                            </div>
+                        </div>
+
+                        <!-- Reset Button -->
+                        <button class="servo-reset-btn" id="servo-reset">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                                <path d="M21 3v5h-5"/>
+                            </svg>
+                            Reset All to 90°
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Car Info -->
                 <div class="info-panel">
                     <h3>System Information</h3>

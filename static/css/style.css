@@ -346,6 +346,174 @@ header h1 {
     font-weight: 600;
 }
 
+/* Servo Control Styles */
+.servo-panel {
+    margin-top: 20px;
+}
+
+.servo-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.servo-item {
+    background: var(--dark-bg);
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.servo-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 15px rgba(37, 99, 235, 0.2);
+}
+
+.servo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.servo-label {
+    font-size: 1em;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.servo-value {
+    font-size: 1.1em;
+    color: var(--secondary-color);
+    font-weight: 700;
+    min-width: 45px;
+    text-align: right;
+}
+
+.servo-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.slider-limit {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    min-width: 30px;
+}
+
+.slider-limit:first-child {
+    text-align: right;
+}
+
+.slider-limit:last-child {
+    text-align: left;
+}
+
+/* Custom Range Slider */
+.servo-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 5px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.servo-slider:hover {
+    background: var(--hover-bg);
+}
+
+.servo-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.5);
+    transition: all 0.2s ease;
+}
+
+.servo-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.7);
+}
+
+.servo-slider::-webkit-slider-thumb:active {
+    transform: scale(1.1);
+}
+
+.servo-slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.5);
+    transition: all 0.2s ease;
+}
+
+.servo-slider::-moz-range-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.7);
+}
+
+.servo-slider::-moz-range-thumb:active {
+    transform: scale(1.1);
+}
+
+/* Slider track fill effect */
+.servo-slider::-webkit-slider-runnable-track {
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 5px;
+}
+
+.servo-slider::-moz-range-track {
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 5px;
+}
+
+/* Reset Button */
+.servo-reset-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: var(--warning-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.servo-reset-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.servo-reset-btn:hover {
+    background: #d97706;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(245, 158, 11, 0.4);
+}
+
+.servo-reset-btn:active {
+    transform: translateY(0);
+}
+
 /* Responsive Design */
 @media (max-width: 1200px) {
     .main-content {
@@ -381,4 +549,4 @@ header h1 {
         width: 180px;
         height: 180px;
     }
-}
+}   

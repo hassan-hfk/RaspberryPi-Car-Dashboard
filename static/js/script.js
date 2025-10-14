@@ -286,4 +286,81 @@ document.addEventListener('DOMContentLoaded', () => {
     stopBtn.classList.add('active');
     
     console.log('Dashboard initialized');
+    
+    // Initialize servo controls
+    initServoControls();
 });
+
+// Servo Control Functions
+function initServoControls() {
+    const servoSliders = document.querySelectorAll('.servo-slider');
+    const resetButton = document.getElementById('servo-reset');
+    
+    // Add event listeners to each slider
+    servoSliders.forEach(slider => {
+        slider.addEventListener('input', handleServoChange);
+    });
+    
+    // Reset button handler
+    resetButton.addEventListener('click', resetAllServos);
+}
+
+function handleServoChange(e) {
+    const slider = e.target;
+    const servoId = slider.dataset.servo;
+    const angle = parseInt(slider.value);
+    
+    // Update display value
+    const valueDisplay = document.getElementById(`servo${servoId}-value`);
+    valueDisplay.textContent = `${angle}°`;
+    
+    // Add visual feedback
+    valueDisplay.style.color = '#10b981';
+    setTimeout(() => {
+        valueDisplay.style.color = '#10b981';
+    }, 200);
+    
+    // Send to server
+    sendServoCommand(servoId, angle);
+}
+
+function sendServoCommand(servoId, angle) {
+    fetch('/servo_control', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            servo_id: servoId,
+            angle: angle
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(`Servo ${servoId} set to ${angle}°:`, data);
+    })
+    .catch(error => {
+        console.error('Error setting servo:', error);
+    });
+}
+
+function resetAllServos() {
+    const servoSliders = document.querySelectorAll('.servo-slider');
+    
+    servoSliders.forEach(slider => {
+        slider.value = 90;
+        const servoId = slider.dataset.servo;
+        const valueDisplay = document.getElementById(`servo${servoId}-value`);
+        valueDisplay.textContent = '90°';
+        
+        // Send reset command
+        sendServoCommand(servoId, 90);
+    });
+    
+    // Visual feedback on reset button
+    const resetBtn = document.getElementById('servo-reset');
+    resetBtn.style.transform = 'rotate(360deg)';
+    setTimeout(() => {
+        resetBtn.style.transform = 'rotate(0deg)';
+    }, 500);
+}
