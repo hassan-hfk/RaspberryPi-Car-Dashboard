@@ -1,217 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPi Car Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.js"></script>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>RPi Car Dashboard</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        
+        <!-- Firebase SDK -->
+        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+        
+        <!-- Socket.IO -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.js"></script>
+    </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🚗 Raspberry Pi Car Control Dashboard</h1>
-            <div class="status-bar">
-                <div class="status-item">
-                    <span class="status-label">Connection:</span>
-                    <span class="status-value" id="connection-status">Connecting...</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-label">Direction:</span>
-                    <span class="status-value" id="direction-status">STOP</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-label">Mode:</span>
-                    <span class="status-value" id="control-mode">Button</span>
-                </div>
+    <!-- Full-screen video background -->
+    <div class="video-fullscreen">
+        <!-- WebRTC Video (primary) -->
+        <video id="video-stream" autoplay playsinline muted></video>
+        <!-- Fallback MJPEG (hidden by default) -->
+        <img id="video-fallback" src="{{ url_for('video_feed') }}" alt="Video Stream" style="display:none;">
+    </div>
+    
+
+    <!-- Top Status Bar -->
+    <div class="top-bar">
+        <div class="status-info">
+            <span class="status-badge" id="connection-status">
+                <span class="status-dot"></span>
+                Connected
+            </span>
+            <span class="status-badge">
+                <span id="direction-status">STOP</span>
+            </span>
+            <span class="status-badge">
+                Mode: <span id="control-mode">Button</span>
+            </span>
+        </div>
+        <div class="system-info">
+            <span class="info-badge">📡 Strong</span>
+            <span class="info-badge">🔋 85%</span>
+            <span class="info-badge">📹 Active</span>
+        </div>
+    </div>
+
+    <!-- Top-Right: Servo Controls -->
+    <div class="servo-overlay">
+        <div class="servo-header-compact">
+            <span>🔧 Servos</span>
+            <button class="servo-reset-compact" id="servo-reset" title="Reset All">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                    <path d="M21 3v5h-5"/>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Servo 1 -->
+        <div class="servo-compact">
+            <div class="servo-compact-header">
+                <span>S1</span>
+                <span class="servo-angle" id="servo1-value">90°</span>
             </div>
-        </header>
-
-        <div class="main-content">
-            <!-- Video Feed Section -->
-            <div class="video-section">
-                <div class="video-container">
-                    <img src="{{ url_for('video_feed') }}" id="video-stream" alt="Video Stream">
-                    <div class="video-overlay">
-                        <div class="overlay-info">
-                            <span id="stream-info">Live Stream Active</span>
-                        </div>
-                    </div>
-                </div>
+            <input type="range" 
+                   class="servo-slider-compact" 
+                   id="servo1-slider" 
+                   min="0" 
+                   max="180" 
+                   value="90"
+                   data-servo="1">
+            <div class="servo-limits">
+                <span>0°</span>
+                <span>180°</span>
             </div>
+        </div>
 
-            <!-- Control Section -->
-            <div class="control-section">
-                <!-- Button Controls -->
-                <div class="control-panel">
-                    <h3>Direction Controls</h3>
-                    <div class="button-controls">
-                        <div class="control-row">
-                            <button class="control-btn" id="forward-btn" data-command="forward">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 5v14M5 12l7-7 7 7"/>
-                                </svg>
-                                <span>Forward</span>
-                            </button>
-                        </div>
-                        <div class="control-row">
-                            <button class="control-btn" id="left-btn" data-command="left">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M19 12H5M12 19l-7-7 7-7"/>
-                                </svg>
-                                <span>Left</span>
-                            </button>
-                            <button class="control-btn stop-btn" id="stop-btn" data-command="stop">
-                                <svg viewBox="0 0 24 24" fill="currentColor">
-                                    <rect x="6" y="6" width="12" height="12"/>
-                                </svg>
-                                <span>Stop</span>
-                            </button>
-                            <button class="control-btn" id="right-btn" data-command="right">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                                </svg>
-                                <span>Right</span>
-                            </button>
-                        </div>
-                        <div class="control-row">
-                            <button class="control-btn" id="backward-btn" data-command="backward">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 19V5M5 12l7 7 7-7"/>
-                                </svg>
-                                <span>Backward</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+        <!-- Servo 2 -->
+        <div class="servo-compact">
+            <div class="servo-compact-header">
+                <span>S2</span>
+                <span class="servo-angle" id="servo2-value">90°</span>
+            </div>
+            <input type="range" 
+                   class="servo-slider-compact" 
+                   id="servo2-slider" 
+                   min="0" 
+                   max="180" 
+                   value="90"
+                   data-servo="2">
+            <div class="servo-limits">
+                <span>0°</span>
+                <span>180°</span>
+            </div>
+        </div>
 
-                <!-- Joystick Control -->
-                <div class="control-panel">
-                    <h3>Joystick Control</h3>
-                    <div class="joystick-container">
-                        <div class="joystick-area" id="joystick-area">
-                            <div class="joystick-stick" id="joystick-stick"></div>
-                            <div class="joystick-center"></div>
-                        </div>
-                        <div class="joystick-info">
-                            <div class="coord-display">
-                                <span>X: <strong id="joystick-x">0</strong></span>
-                                <span>Y: <strong id="joystick-y">0</strong></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Servo Controls -->
-                <div class="control-panel servo-panel">
-                    <h3>🔧 Servo Motor Control</h3>
-                    <div class="servo-controls">
-                        <!-- Servo 1 -->
-                        <div class="servo-item">
-                            <div class="servo-header">
-                                <span class="servo-label">Servo 1</span>
-                                <span class="servo-value" id="servo1-value">90°</span>
-                            </div>
-                            <div class="servo-slider-container">
-                                <span class="slider-limit">0°</span>
-                                <input type="range" 
-                                       class="servo-slider" 
-                                       id="servo1-slider" 
-                                       min="0" 
-                                       max="180" 
-                                       value="90"
-                                       data-servo="1">
-                                <span class="slider-limit">180°</span>
-                            </div>
-                        </div>
-
-                        <!-- Servo 2 -->
-                        <div class="servo-item">
-                            <div class="servo-header">
-                                <span class="servo-label">Servo 2</span>
-                                <span class="servo-value" id="servo2-value">90°</span>
-                            </div>
-                            <div class="servo-slider-container">
-                                <span class="slider-limit">0°</span>
-                                <input type="range" 
-                                       class="servo-slider" 
-                                       id="servo2-slider" 
-                                       min="0" 
-                                       max="180" 
-                                       value="90"
-                                       data-servo="2">
-                                <span class="slider-limit">180°</span>
-                            </div>
-                        </div>
-
-                        <!-- Servo 3 -->
-                        <div class="servo-item">
-                            <div class="servo-header">
-                                <span class="servo-label">Servo 3</span>
-                                <span class="servo-value" id="servo3-value">90°</span>
-                            </div>
-                            <div class="servo-slider-container">
-                                <span class="slider-limit">0°</span>
-                                <input type="range" 
-                                       class="servo-slider" 
-                                       id="servo3-slider" 
-                                       min="0" 
-                                       max="180" 
-                                       value="90"
-                                       data-servo="3">
-                                <span class="slider-limit">180°</span>
-                            </div>
-                        </div>
-
-                        <!-- Reset Button -->
-                        <button class="servo-reset-btn" id="servo-reset">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-                                <path d="M21 3v5h-5"/>
-                            </svg>
-                            Reset All to 90°
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Car Info -->
-                <div class="info-panel">
-                    <h3>System Information</h3>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-icon">📡</span>
-                            <div class="info-content">
-                                <div class="info-label">GSM Signal</div>
-                                <div class="info-value">Strong</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-icon">🔋</span>
-                            <div class="info-content">
-                                <div class="info-label">Battery</div>
-                                <div class="info-value">85%</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-icon">📹</span>
-                            <div class="info-content">
-                                <div class="info-label">Camera</div>
-                                <div class="info-value">Active</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-icon">⚙️</span>
-                            <div class="info-content">
-                                <div class="info-label">Motors</div>
-                                <div class="info-value">Ready</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Servo 3 -->
+        <div class="servo-compact">
+            <div class="servo-compact-header">
+                <span>S3</span>
+                <span class="servo-angle" id="servo3-value">90°</span>
+            </div>
+            <input type="range" 
+                   class="servo-slider-compact" 
+                   id="servo3-slider" 
+                   min="0" 
+                   max="180" 
+                   value="90"
+                   data-servo="3">
+            <div class="servo-limits">
+                <span>0°</span>
+                <span>180°</span>
             </div>
         </div>
     </div>
 
+    <!-- Bottom-Left: Movement Controls -->
+    <div class="movement-controls">
+        <div class="dpad">
+            <button class="dpad-btn dpad-up" id="forward-btn" data-command="forward">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4l-8 8h5v8h6v-8h5z"/>
+                </svg>
+            </button>
+            <div class="dpad-middle">
+                <button class="dpad-btn dpad-left" id="left-btn" data-command="left">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20 12l-8-8v5H4v6h8v5z"/>
+                    </svg>
+                </button>
+                <button class="dpad-btn dpad-center" id="stop-btn" data-command="stop">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="6" y="6" width="12" height="12"/>
+                    </svg>
+                </button>
+                <button class="dpad-btn dpad-right" id="right-btn" data-command="right">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M4 12l8-8v5h8v6h-8v5z"/>
+                    </svg>
+                </button>
+            </div>
+            <button class="dpad-btn dpad-down" id="backward-btn" data-command="backward">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 20l-8-8h5V4h6v8h5z"/>
+                </svg>
+            </button>
+        </div>
+        <div class="control-label">Movement</div>
+    </div>
+
+    <!-- Bottom-Right: Joystick -->
+    <div class="joystick-overlay">
+        <div class="joystick-area-compact" id="joystick-area">
+            <div class="joystick-stick-compact" id="joystick-stick"></div>
+            <div class="joystick-center-compact"></div>
+        </div>
+        <div class="joystick-coords">
+            <span>X:<strong id="joystick-x">0</strong></span>
+            <span>Y:<strong id="joystick-y">0</strong></span>
+        </div>
+        <div class="control-label">Joystick</div>
+    </div>
+
+    <!-- WebRTC Client Script -->
+    <script src="{{ url_for('static', filename='js/webrtc_client.js') }}"></script>
+
+    <!-- Main Dashboard Script -->
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

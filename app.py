@@ -134,5 +134,125 @@ def handle_connect():
 def handle_disconnect():
     print('Client disconnected')
 
+from flask import jsonify, request
+from firebase_signalling import FirebaseSignaling
+from webrtc_config import *
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Initialize Firebase signaling
+signaling = FirebaseSignaling('rpi-dashboard-webrtc-firebase-adminsdk-fbsvc-a1d73bace1.json')
+
+def add_webrtc_routes(app):
+    """
+    Add WebRTC routes to Flask app
+    """
+    
+    @app.route('/webrtc/config')
+    def webrtc_config():
+        """
+        Return WebRTC configuration for client
+        """
+        return jsonify({
+            'iceServers': WEBRTC_CONFIG['iceServers'],
+            'roomId': 'rpi_car_stream',
+            'deviceId': DASHBOARD_DEVICE_ID
+        })
+    
+    @app.route('/webrtc/offer', methods=['POST'])
+    def receive_offer():
+        """
+        Receive offer from client (not used, client gets from Firebase)
+        """
+        try:
+            data = request.json
+            room_id = data.get('roomId')
+            offer = data.get('offer')
+            
+            # Client will get offer from Firebase directly
+            return jsonify({'status': 'success'})
+        except Exception as e:
+            logger.error(f"Error receiving offer: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/webrtc/answer', methods=['POST'])
+    def send_answer():
+        """
+        Send answer to Firebase (backup route, client sends directly)
+        """
+        try:
+            data = request.json
+            room_id = data.get('roomId')
+            answer = data.get('answer')
+            device_id = data.get('deviceId', DASHBOARD_DEVICE_ID)
+            
+            signaling.send_answer(room_id, answer, device_id)
+            
+            return jsonify({'status': 'success'})
+        except Exception as e:
+            logger.error(f"Error sending answer: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/webrtc/ice-candidate', methods=['POST'])
+    def add_ice_candidate():
+        """
+        Add ICE candidate to Firebase (backup route)
+        """
+        try:
+            data = request.json
+            room_id = data.get('roomId')
+            candidate = data.get('candidate')
+            device_id = data.get('deviceId', DASHBOARD_DEVICE_ID)
+            
+            signaling.add_ice_candidate(room_id, candidate, device_id)
+            
+            return jsonify({'status': 'success'})
+        except Exception as e:
+            logger.error(f"Error adding ICE candidate: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/webrtc/status/<room_id>')
+    def get_room_status(room_id):
+        """
+        Get current room status
+        """
+        try:
+            status = signaling.get_room_status(room_id)
+            return jsonify({
+                'status': status,
+                'roomId': room_id
+            })
+        except Exception as e:
+            logger.error(f"Error getting room status: {e}")
+            return jsonify({'error': str(e)}), 500
+
+# WebRTC Configuration Route
+@app.route('/webrtc/config')
+def webrtc_config():
+    """Return WebRTC and Firebase configuration for client"""
+    import os
+    
+    firebase_web_config = {
+        'apiKey': os.getenv('FIREBASE_API_KEY', 'AIzaSyDGxQ7_your_api_key_here'),
+        'authDomain': os.getenv('FIREBASE_AUTH_DOMAIN', 'your-project.firebaseapp.com'),
+        'projectId': os.getenv('FIREBASE_PROJECT_ID', 'your-project-id'),
+        'storageBucket': os.getenv('FIREBASE_STORAGE_BUCKET', 'your-project.appspot.com'),
+        'messagingSenderId': os.getenv('FIREBASE_MESSAGING_SENDER_ID', '123456789'),
+        'appId': os.getenv('FIREBASE_APP_ID', '1:123456789:web:abc123')
+    }
+    
+    return jsonify({
+        'firebase': firebase_web_config,
+        'roomId': 'rpi_car_stream',
+        'deviceId': 'dashboard_viewer',
+        'iceServers': [
+            {'urls': 'stun:stun.l.google.com:19302'},
+            {'urls': 'stun:stun1.l.google.com:19302'},
+            {'urls': 'stun:stun2.l.google.com:19302'}
+        ]
+    })
+
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+

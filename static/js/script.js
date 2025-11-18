@@ -7,7 +7,7 @@ let joystickPosition = { x: 0, y: 0 };
 let currentCommand = 'stop';
 
 // DOM Elements
-const controlButtons = document.querySelectorAll('.control-btn');
+const controlButtons = document.querySelectorAll('.dpad-btn');
 const joystickArea = document.getElementById('joystick-area');
 const joystickStick = document.getElementById('joystick-stick');
 const joystickX = document.getElementById('joystick-x');
@@ -19,14 +19,20 @@ const controlMode = document.getElementById('control-mode');
 // Socket.IO event handlers
 socket.on('connect', () => {
     console.log('Connected to server');
-    connectionStatus.textContent = 'Connected';
-    connectionStatus.style.color = '#10b981';
+    const statusText = connectionStatus.querySelector('.status-dot') ? 
+        connectionStatus.childNodes[2] : connectionStatus;
+    if (statusText.nodeType === Node.TEXT_NODE) {
+        statusText.textContent = ' Connected';
+    }
 });
 
 socket.on('disconnect', () => {
     console.log('Disconnected from server');
-    connectionStatus.textContent = 'Disconnected';
-    connectionStatus.style.color = '#ef4444';
+    const statusText = connectionStatus.querySelector('.status-dot') ?
+        connectionStatus.childNodes[2] : connectionStatus;
+    if (statusText.nodeType === Node.TEXT_NODE) {
+        statusText.textContent = ' Disconnected';
+    }
 });
 
 socket.on('connection_response', (data) => {
@@ -293,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Servo Control Functions
 function initServoControls() {
-    const servoSliders = document.querySelectorAll('.servo-slider');
+    const servoSliders = document.querySelectorAll('.servo-slider-compact');
     const resetButton = document.getElementById('servo-reset');
     
     // Add event listeners to each slider
@@ -345,7 +351,7 @@ function sendServoCommand(servoId, angle) {
 }
 
 function resetAllServos() {
-    const servoSliders = document.querySelectorAll('.servo-slider');
+    const servoSliders = document.querySelectorAll('.servo-slider-compact');
     
     servoSliders.forEach(slider => {
         slider.value = 90;
